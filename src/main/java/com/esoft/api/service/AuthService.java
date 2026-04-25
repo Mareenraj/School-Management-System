@@ -8,13 +8,16 @@ import com.esoft.api.dto.auth.ResendOtpRequest;
 import com.esoft.api.dto.auth.SigninRequest;
 import com.esoft.api.dto.auth.SignupRequest;
 import com.esoft.api.entity.User;
+import com.esoft.api.entity.enums.Role;
 import com.esoft.api.exception.DuplicateResourceException;
 import com.esoft.api.exception.InvalidOtpException;
 import com.esoft.api.exception.InvalidTokenException;
+import com.esoft.api.exception.InvalidUserException;
 import com.esoft.api.exception.ResourceNotFoundException;
 import com.esoft.api.exception.UnverifiedAccountException;
 import com.esoft.api.repository.UserRepository;
 import com.esoft.api.security.JwtService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -22,6 +25,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -33,6 +38,7 @@ public class AuthService {
     private final EmailService emailService;
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
+    private final String adminEmail;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -40,7 +46,8 @@ public class AuthService {
                        OtpService otpService,
                        EmailService emailService,
                        RefreshTokenService refreshTokenService,
-                       AuthenticationManager authenticationManager) {
+                       AuthenticationManager authenticationManager,
+                       @Value("${admin.email}") String adminEmail) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -48,22 +55,41 @@ public class AuthService {
         this.emailService = emailService;
         this.refreshTokenService = refreshTokenService;
         this.authenticationManager = authenticationManager;
+        this.adminEmail = adminEmail;
     }
 
     @Transactional
     public MessageResponse signup(SignupRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateResourceException("Email is already registered: " + request.email());
+        Optional<User> optionalUser = userRepository.findByEmail(request.email());
+
+        if (optionalUser.isEmpty()) {
+            if (request.email().equals(adminEmail)) {
+                // Admin bootstrapping
+                User adminUser = User.builder()
+                        .name(request.name() != null ? request.name() : "Admin")
+                        .email(request.email())
+                        .password(passwordEncoder.encode(request.password()))
+                        .role(Role.ADMIN)
+                        .isVerified(false)
+                        .build();
+                userRepository.save(adminUser);
+
+                String otp = otpService.generateAndStoreOtp(adminUser.getEmail());
+                emailService.sendOtpEmail(adminUser.getEmail(), otp, adminUser.getName());
+
+                return new MessageResponse("Registration successful. Please check your email for OTP verification.");
+            } else {
+                throw new InvalidUserException("Invalid user. Contact admin.");
+            }
         }
 
-        User user = User.builder()
-                .name(request.name())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .role(request.role())
-                .isVerified(false)
-                .build();
+        User user = optionalUser.get();
 
+        if (user.getPassword() != null) {
+            throw new DuplicateResourceException("Account already activated.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.save(user);
 
         String otp = otpService.generateAndStoreOtp(user.getEmail());

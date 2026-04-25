@@ -44,6 +44,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(InvalidUserException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidUser(
+            InvalidUserException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidToken(
             InvalidTokenException ex, HttpServletRequest request) {

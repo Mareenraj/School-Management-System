@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // Admin-only endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/batches/**").hasRole("ADMIN")
                         .requestMatchers("/api/courses/**").hasRole("ADMIN")
                         .requestMatchers("/api/students/**").hasRole("ADMIN")
