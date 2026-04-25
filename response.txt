@@ -1,0 +1,1 @@
+{"timestamp":"2026-04-25T15:34:30.133037273","status":400,"error":"Bad Request","message":"Invalid or expired OTP","path":"/api/auth/verify-otp"}
