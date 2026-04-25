@@ -1,0 +1,98 @@
+package com.esoft.api.service;
+
+import com.esoft.api.dto.module.ModuleRequest;
+import com.esoft.api.dto.module.ModuleResponse;
+import com.esoft.api.entity.Course;
+import com.esoft.api.entity.Lecturer;
+import com.esoft.api.entity.Module;
+import com.esoft.api.exception.ResourceNotFoundException;
+import com.esoft.api.repository.CourseRepository;
+import com.esoft.api.repository.LecturerRepository;
+import com.esoft.api.repository.ModuleRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class ModuleService {
+
+    private final ModuleRepository moduleRepository;
+    private final CourseRepository courseRepository;
+    private final LecturerRepository lecturerRepository;
+
+    public ModuleService(ModuleRepository moduleRepository,
+                         CourseRepository courseRepository,
+                         LecturerRepository lecturerRepository) {
+        this.moduleRepository = moduleRepository;
+        this.courseRepository = courseRepository;
+        this.lecturerRepository = lecturerRepository;
+    }
+
+    @Transactional
+    public ModuleResponse create(ModuleRequest request) {
+        Course course = courseRepository.findById(request.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", request.courseId()));
+        Lecturer lecturer = lecturerRepository.findById(request.lecturerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Lecturer", "id", request.lecturerId()));
+
+        Module module = Module.builder()
+                .name(request.name())
+                .course(course)
+                .lecturer(lecturer)
+                .build();
+
+        return toResponse(moduleRepository.save(module));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModuleResponse> getAll() {
+        return moduleRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ModuleResponse getById(UUID id) {
+        return toResponse(findModuleOrThrow(id));
+    }
+
+    @Transactional
+    public ModuleResponse update(UUID id, ModuleRequest request) {
+        Module module = findModuleOrThrow(id);
+
+        Course course = courseRepository.findById(request.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", request.courseId()));
+        Lecturer lecturer = lecturerRepository.findById(request.lecturerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Lecturer", "id", request.lecturerId()));
+
+        module.setName(request.name());
+        module.setCourse(course);
+        module.setLecturer(lecturer);
+
+        return toResponse(moduleRepository.save(module));
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        Module module = findModuleOrThrow(id);
+        moduleRepository.delete(module);
+    }
+
+    private Module findModuleOrThrow(UUID id) {
+        return moduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Module", "id", id));
+    }
+
+    private ModuleResponse toResponse(Module module) {
+        return new ModuleResponse(
+                module.getId(),
+                module.getName(),
+                module.getCourse().getId(),
+                module.getCourse().getName(),
+                module.getLecturer().getId(),
+                module.getLecturer().getUser().getName()
+        );
+    }
+}
