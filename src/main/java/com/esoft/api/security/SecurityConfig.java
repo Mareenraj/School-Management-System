@@ -2,7 +2,6 @@ package com.esoft.api.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -38,6 +37,9 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Profile - all authenticated users
+                        .requestMatchers("/api/auth/profile").authenticated()
+                        .requestMatchers("/api/auth/logout").authenticated()
                         // Public auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
 

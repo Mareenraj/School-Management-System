@@ -1,20 +1,10 @@
 package com.esoft.api.service;
 
-import com.esoft.api.dto.auth.AuthResponse;
-import com.esoft.api.dto.auth.MessageResponse;
-import com.esoft.api.dto.auth.OtpRequest;
-import com.esoft.api.dto.auth.RefreshTokenRequest;
-import com.esoft.api.dto.auth.ResendOtpRequest;
-import com.esoft.api.dto.auth.SigninRequest;
-import com.esoft.api.dto.auth.SignupRequest;
+import com.esoft.api.dto.auth.*;
+import com.esoft.api.dto.profile.ProfileResponse;
 import com.esoft.api.entity.User;
 import com.esoft.api.entity.enums.Role;
-import com.esoft.api.exception.DuplicateResourceException;
-import com.esoft.api.exception.InvalidOtpException;
-import com.esoft.api.exception.InvalidTokenException;
-import com.esoft.api.exception.InvalidUserException;
-import com.esoft.api.exception.ResourceNotFoundException;
-import com.esoft.api.exception.UnverifiedAccountException;
+import com.esoft.api.exception.*;
 import com.esoft.api.repository.UserRepository;
 import com.esoft.api.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -198,5 +189,18 @@ public class AuthService {
     public MessageResponse logout(String email) {
         refreshTokenService.deleteRefreshToken(email);
         return new MessageResponse("Logged out successfully.");
+    }
+
+    public ProfileResponse getProfile(Authentication authentication) {
+        String username = authentication.getName();
+
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new ProfileResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail()
+        );
     }
 }

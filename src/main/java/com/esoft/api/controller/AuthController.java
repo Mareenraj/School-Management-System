@@ -1,21 +1,13 @@
 package com.esoft.api.controller;
 
-import com.esoft.api.dto.auth.AuthResponse;
-import com.esoft.api.dto.auth.MessageResponse;
-import com.esoft.api.dto.auth.OtpRequest;
-import com.esoft.api.dto.auth.RefreshTokenRequest;
-import com.esoft.api.dto.auth.ResendOtpRequest;
-import com.esoft.api.dto.auth.SigninRequest;
-import com.esoft.api.dto.auth.SignupRequest;
+import com.esoft.api.dto.auth.*;
+import com.esoft.api.dto.profile.ProfileResponse;
 import com.esoft.api.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -55,5 +47,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<MessageResponse> logout(Authentication authentication) {
         return ResponseEntity.ok(authService.logout(authentication.getName()));
+    }
+
+    @PostMapping("/profile")
+    public ResponseEntity<ProfileResponse> getProfile(Authentication authentication) {
+        return ResponseEntity.ok(authService.getProfile(authentication));
     }
 }
