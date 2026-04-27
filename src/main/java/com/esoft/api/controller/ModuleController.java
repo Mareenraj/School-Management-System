@@ -2,6 +2,7 @@ package com.esoft.api.controller;
 
 import com.esoft.api.dto.module.ModuleRequest;
 import com.esoft.api.dto.module.ModuleResponse;
+import com.esoft.api.dto.student.StudentResponse;
 import com.esoft.api.service.ModuleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,8 @@ public class ModuleController {
     public ModuleController(ModuleService moduleService) {
         this.moduleService = moduleService;
     }
+
+    // ─── Module CRUD ───────────────────────────────────────────────────
 
     @PostMapping
     public ResponseEntity<ModuleResponse> create(@Valid @RequestBody ModuleRequest request) {
@@ -45,5 +48,12 @@ public class ModuleController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         moduleService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ─── Hierarchical Queries ──────────────────────────────────────────
+
+    @GetMapping("/{moduleId}/students")
+    public ResponseEntity<List<StudentResponse>> getStudentsByModuleId(@PathVariable UUID moduleId) {
+        return ResponseEntity.ok(moduleService.getStudentsByModuleId(moduleId));
     }
 }

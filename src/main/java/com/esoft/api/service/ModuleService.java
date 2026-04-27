@@ -2,11 +2,13 @@ package com.esoft.api.service;
 
 import com.esoft.api.dto.module.ModuleRequest;
 import com.esoft.api.dto.module.ModuleResponse;
+import com.esoft.api.dto.student.StudentResponse;
 import com.esoft.api.entity.Course;
 import com.esoft.api.entity.Lecturer;
 import com.esoft.api.entity.Module;
 import com.esoft.api.exception.ResourceNotFoundException;
 import com.esoft.api.repository.CourseRepository;
+import com.esoft.api.repository.EnrollmentRepository;
 import com.esoft.api.repository.LecturerRepository;
 import com.esoft.api.repository.ModuleRepository;
 import org.springframework.stereotype.Service;
@@ -21,14 +23,19 @@ public class ModuleService {
     private final ModuleRepository moduleRepository;
     private final CourseRepository courseRepository;
     private final LecturerRepository lecturerRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     public ModuleService(ModuleRepository moduleRepository,
                          CourseRepository courseRepository,
-                         LecturerRepository lecturerRepository) {
+                         LecturerRepository lecturerRepository,
+                         EnrollmentRepository enrollmentRepository) {
         this.moduleRepository = moduleRepository;
         this.courseRepository = courseRepository;
         this.lecturerRepository = lecturerRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
+
+    // ─── Module CRUD ───────────────────────────────────────────────────
 
     @Transactional
     public ModuleResponse create(ModuleRequest request) {
@@ -79,6 +86,37 @@ public class ModuleService {
         Module module = findModuleOrThrow(id);
         moduleRepository.delete(module);
     }
+
+    // ─── Hierarchical Queries ──────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<ModuleResponse> getByCourseId(UUID courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", courseId));
+        return moduleRepository.findByCourse(course).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentResponse> getStudentsByModuleId(UUID moduleId) {
+        Module module = findModuleOrThrow(moduleId);
+        return enrollmentRepository.findByModule(module).stream()
+                .map(enrollment -> {
+                    var student = enrollment.getStudent();
+                    return new StudentResponse(
+                            student.getId(),
+                            student.getUser().getId(),
+                            student.getUser().getName(),
+                            student.getUser().getEmail(),
+                            student.getBatch() != null ? student.getBatch().getId() : null,
+                            student.getBatch() != null ? student.getBatch().getName() : null
+                    );
+                })
+                .toList();
+    }
+
+    // ─── Helper Methods ────────────────────────────────────────────────
 
     private Module findModuleOrThrow(UUID id) {
         return moduleRepository.findById(id)

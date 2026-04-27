@@ -1,13 +1,19 @@
 package com.esoft.api.dto.batch;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+
+import java.util.UUID;
 
 public record BatchRequest(
         @NotBlank(message = "Batch name is required")
         String name,
 
         @Positive(message = "Year must be a positive number")
-        int year
+        int year,
+
+        @NotNull(message = "Course ID is required")
+        UUID courseId
 ) {
 }

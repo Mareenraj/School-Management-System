@@ -2,12 +2,10 @@ package com.esoft.api.dto.batch;
 
 import java.util.UUID;
 
-public record BatchResponse(
+public record BatchSummary(
         UUID id,
         String name,
         int year,
-        UUID courseId,
-        String courseName,
         long studentCount
 ) {
 }

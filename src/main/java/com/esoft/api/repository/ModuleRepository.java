@@ -1,7 +1,6 @@
 package com.esoft.api.repository;
 
 import com.esoft.api.entity.Course;
-import com.esoft.api.entity.Lecturer;
 import com.esoft.api.entity.Module;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,5 +13,7 @@ public interface ModuleRepository extends JpaRepository<Module, UUID> {
 
     List<Module> findByCourse(Course course);
 
-    List<Module> findByLecturer(Lecturer lecturer);
+    List<Module> findByLecturer(com.esoft.api.entity.Lecturer lecturer);
+
+    long countByCourse(Course course);
 }

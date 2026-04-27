@@ -1,7 +1,6 @@
 package com.esoft.api.controller;
 
-import com.esoft.api.dto.batch.BatchRequest;
-import com.esoft.api.dto.batch.BatchResponse;
+import com.esoft.api.dto.batch.*;
 import com.esoft.api.service.BatchService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,8 @@ public class BatchController {
     public BatchController(BatchService batchService) {
         this.batchService = batchService;
     }
+
+    // ─── Batch CRUD ────────────────────────────────────────────────────
 
     @PostMapping
     public ResponseEntity<BatchResponse> create(@Valid @RequestBody BatchRequest request) {
@@ -45,5 +46,44 @@ public class BatchController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         batchService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ─── Student Management within Batch ───────────────────────────────
+
+    @GetMapping("/{batchId}/students")
+    public ResponseEntity<List<BatchStudentResponse>> getStudentsByBatchId(@PathVariable UUID batchId) {
+        return ResponseEntity.ok(batchService.getStudentsByBatchId(batchId));
+    }
+
+    @PostMapping("/{batchId}/students")
+    public ResponseEntity<BatchStudentResponse> assignStudentToBatch(
+            @PathVariable UUID batchId,
+            @Valid @RequestBody BatchStudentRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(batchService.assignStudentToBatch(batchId, request));
+    }
+
+    @PostMapping("/{batchId}/students/bulk")
+    public ResponseEntity<List<BatchStudentResponse>> bulkAssignStudents(
+            @PathVariable UUID batchId,
+            @Valid @RequestBody BulkBatchStudentRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(batchService.bulkAssignStudents(batchId, request));
+    }
+
+    @DeleteMapping("/{batchId}/students/{studentId}")
+    public ResponseEntity<Void> removeStudentFromBatch(
+            @PathVariable UUID batchId,
+            @PathVariable UUID studentId) {
+        batchService.removeStudentFromBatch(batchId, studentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{batchId}/students/{studentId}/transfer")
+    public ResponseEntity<BatchStudentResponse> transferStudent(
+            @PathVariable UUID batchId,
+            @PathVariable UUID studentId,
+            @RequestParam UUID newBatchId) {
+        return ResponseEntity.ok(batchService.transferStudent(batchId, studentId, newBatchId));
     }
 }

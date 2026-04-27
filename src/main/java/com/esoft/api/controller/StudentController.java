@@ -21,6 +21,8 @@ public class StudentController {
         this.studentService = studentService;
     }
 
+    // ─── Student CRUD ──────────────────────────────────────────────────
+
     @PostMapping
     public ResponseEntity<StudentResponse> create(@Valid @RequestBody StudentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(studentService.create(request));
@@ -45,5 +47,12 @@ public class StudentController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         studentService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ─── Specialized Queries ───────────────────────────────────────────
+
+    @GetMapping("/unassigned")
+    public ResponseEntity<List<StudentResponse>> getUnassignedStudents() {
+        return ResponseEntity.ok(studentService.getUnassignedStudents());
     }
 }

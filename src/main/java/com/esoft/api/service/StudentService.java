@@ -31,6 +31,8 @@ public class StudentService {
         this.batchRepository = batchRepository;
     }
 
+    // ─── Student CRUD ──────────────────────────────────────────────────
+
     @Transactional
     public StudentResponse create(StudentRequest request) {
         User user = userRepository.findById(request.userId())
@@ -86,6 +88,17 @@ public class StudentService {
         Student student = findStudentOrThrow(id);
         studentRepository.delete(student);
     }
+
+    // ─── Specialized Queries ───────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<StudentResponse> getUnassignedStudents() {
+        return studentRepository.findByBatchIsNull().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ─── Helper Methods ────────────────────────────────────────────────
 
     private Student findStudentOrThrow(UUID id) {
         return studentRepository.findById(id)
