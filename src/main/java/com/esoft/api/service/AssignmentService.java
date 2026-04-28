@@ -61,6 +61,13 @@ public class AssignmentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<AssignmentResponse> getAssignmentsByStudentId(UUID studentId) {
+        return assignmentRepository.findAssignmentsByStudentId(studentId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     @Transactional
     public AssignmentResponse update(UUID id, AssignmentRequest request) {
         Assignment assignment = findAssignmentOrThrow(id);

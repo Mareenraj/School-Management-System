@@ -99,6 +99,15 @@ public class ModuleService {
     }
 
     @Transactional(readOnly = true)
+    public List<ModuleResponse> getByLecturerId(UUID lecturerId) {
+        Lecturer lecturer = lecturerRepository.findById(lecturerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lecturer", "id", lecturerId));
+        return moduleRepository.findByLecturer(lecturer).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<StudentResponse> getStudentsByModuleId(UUID moduleId) {
         Module module = findModuleOrThrow(moduleId);
         return enrollmentRepository.findByModule(module).stream()

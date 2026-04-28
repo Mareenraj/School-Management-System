@@ -55,6 +55,20 @@ public class LecturerService {
     }
 
     @Transactional
+    public LecturerResponse update(UUID id, LecturerRequest request) {
+        Lecturer lecturer = findLecturerOrThrow(id);
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.userId()));
+
+        if (!lecturer.getUser().getId().equals(user.getId()) && lecturerRepository.existsByUser(user)) {
+            throw new DuplicateResourceException("Lecturer profile already exists for this user");
+        }
+
+        lecturer.setUser(user);
+        return toResponse(lecturerRepository.save(lecturer));
+    }
+
+    @Transactional
     public void delete(UUID id) {
         Lecturer lecturer = findLecturerOrThrow(id);
         lecturerRepository.delete(lecturer);

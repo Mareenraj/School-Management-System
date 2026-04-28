@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -47,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/batches/**").hasRole("ADMIN")
                         .requestMatchers("/api/courses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADMIN", "STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/lecturers/**").hasAnyRole("ADMIN", "LECTURER")
                         .requestMatchers("/api/students/**").hasRole("ADMIN")
                         .requestMatchers("/api/lecturers/**").hasRole("ADMIN")
                         .requestMatchers("/api/enrollments/**").hasRole("ADMIN")

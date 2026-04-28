@@ -98,6 +98,13 @@ public class StudentService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<StudentResponse> getStudentsByLecturerId(UUID lecturerId) {
+        return studentRepository.findStudentsByLecturerId(lecturerId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     // ─── Helper Methods ────────────────────────────────────────────────
 
     private Student findStudentOrThrow(UUID id) {

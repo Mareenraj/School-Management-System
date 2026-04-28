@@ -51,4 +51,10 @@ public class AssignmentController {
         assignmentService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    //get Assignments By student ID
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<AssignmentResponse>> getAssignmentsByStudentId(@PathVariable UUID studentId) {
+        return ResponseEntity.ok(assignmentService.getAssignmentsByStudentId(studentId));
+    }
 }
