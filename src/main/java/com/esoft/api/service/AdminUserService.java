@@ -2,6 +2,7 @@ package com.esoft.api.service;
 
 import com.esoft.api.dto.auth.CreateUserRequest;
 import com.esoft.api.dto.auth.MessageResponse;
+import com.esoft.api.dto.auth.UserListItemResponse;
 import com.esoft.api.entity.Batch;
 import com.esoft.api.entity.Lecturer;
 import com.esoft.api.entity.Student;
@@ -15,6 +16,8 @@ import com.esoft.api.repository.StudentRepository;
 import com.esoft.api.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class AdminUserService {
@@ -72,5 +75,12 @@ public class AdminUserService {
         }
 
         return new MessageResponse(request.role().name() + " account created successfully. The user can now sign up.");
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserListItemResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserListItemResponse(user.getId(), user.getName()))
+                .toList();
     }
 }
