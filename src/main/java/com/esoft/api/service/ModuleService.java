@@ -2,11 +2,13 @@ package com.esoft.api.service;
 
 import com.esoft.api.dto.module.ModuleRequest;
 import com.esoft.api.dto.module.ModuleResponse;
+import com.esoft.api.entity.Batch;
 import com.esoft.api.dto.student.StudentResponse;
 import com.esoft.api.entity.Course;
 import com.esoft.api.entity.Lecturer;
 import com.esoft.api.entity.Module;
 import com.esoft.api.exception.ResourceNotFoundException;
+import com.esoft.api.repository.BatchRepository;
 import com.esoft.api.repository.CourseRepository;
 import com.esoft.api.repository.EnrollmentRepository;
 import com.esoft.api.repository.LecturerRepository;
@@ -21,15 +23,18 @@ import java.util.UUID;
 public class ModuleService {
 
     private final ModuleRepository moduleRepository;
+    private final BatchRepository batchRepository;
     private final CourseRepository courseRepository;
     private final LecturerRepository lecturerRepository;
     private final EnrollmentRepository enrollmentRepository;
 
     public ModuleService(ModuleRepository moduleRepository,
+                         BatchRepository batchRepository,
                          CourseRepository courseRepository,
                          LecturerRepository lecturerRepository,
                          EnrollmentRepository enrollmentRepository) {
         this.moduleRepository = moduleRepository;
+        this.batchRepository = batchRepository;
         this.courseRepository = courseRepository;
         this.lecturerRepository = lecturerRepository;
         this.enrollmentRepository = enrollmentRepository;
@@ -88,6 +93,15 @@ public class ModuleService {
     }
 
     // ─── Hierarchical Queries ──────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<ModuleResponse> getByBatchId(UUID batchId) {
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch", "id", batchId));
+        return moduleRepository.findByCourse(batch.getCourse()).stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public List<ModuleResponse> getByCourseId(UUID courseId) {

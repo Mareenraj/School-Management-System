@@ -284,12 +284,14 @@ class ControllerSmokeTest {
         ModuleService moduleService = mock(ModuleService.class);
         ModuleController controller = new ModuleController(moduleService);
         UUID id = UUID.randomUUID();
+        UUID batchId = UUID.randomUUID();
         UUID moduleId = UUID.randomUUID();
 
         when(moduleService.create(null)).thenReturn(null);
         when(moduleService.getAll()).thenReturn(List.of());
         when(moduleService.getById(id)).thenReturn(null);
         when(moduleService.update(id, null)).thenReturn(null);
+        when(moduleService.getByBatchId(batchId)).thenReturn(List.of());
         when(moduleService.getStudentsByModuleId(moduleId)).thenReturn(List.of());
 
         assertEquals(HttpStatus.CREATED, controller.create(null).getStatusCode());
@@ -297,6 +299,7 @@ class ControllerSmokeTest {
         assertEquals(HttpStatus.OK, controller.getById(id).getStatusCode());
         assertEquals(HttpStatus.OK, controller.update(id, null).getStatusCode());
         assertEquals(HttpStatus.NO_CONTENT, controller.delete(id).getStatusCode());
+        assertEquals(HttpStatus.OK, controller.getModulesByBatchId(batchId).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getStudentsByModuleId(moduleId).getStatusCode());
 
         verify(moduleService).create(null);
@@ -304,6 +307,7 @@ class ControllerSmokeTest {
         verify(moduleService).getById(id);
         verify(moduleService).update(id, null);
         verify(moduleService).delete(id);
+        verify(moduleService).getByBatchId(batchId);
         verify(moduleService).getStudentsByModuleId(moduleId);
     }
 

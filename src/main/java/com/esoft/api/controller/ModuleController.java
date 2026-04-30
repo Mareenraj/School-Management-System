@@ -52,6 +52,11 @@ public class ModuleController {
 
     // ─── Hierarchical Queries ──────────────────────────────────────────
 
+    @GetMapping("/batches/{batchId}")
+    public ResponseEntity<List<ModuleResponse>> getModulesByBatchId(@PathVariable UUID batchId) {
+        return ResponseEntity.ok(moduleService.getByBatchId(batchId));
+    }
+
     @GetMapping("/{moduleId}/students")
     public ResponseEntity<List<StudentResponse>> getStudentsByModuleId(@PathVariable UUID moduleId) {
         return ResponseEntity.ok(moduleService.getStudentsByModuleId(moduleId));
