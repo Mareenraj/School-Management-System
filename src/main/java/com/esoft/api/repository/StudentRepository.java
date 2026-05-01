@@ -28,6 +28,8 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
 
     long countByBatch_Course(Course course);
 
+    Optional<Batch> getBatchById(UUID id);
+
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT e.student FROM Enrollment e WHERE e.module.lecturer.id = :lecturerId")
     List<Student> findStudentsByLecturerId(@org.springframework.data.repository.query.Param("lecturerId") UUID lecturerId);
 }

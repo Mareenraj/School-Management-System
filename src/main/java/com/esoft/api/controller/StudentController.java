@@ -1,5 +1,6 @@
 package com.esoft.api.controller;
 
+import com.esoft.api.dto.course.CourseResponse;
 import com.esoft.api.dto.student.StudentRequest;
 import com.esoft.api.dto.student.StudentResponse;
 import com.esoft.api.service.StudentService;
@@ -47,6 +48,11 @@ public class StudentController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         studentService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/course")
+    public ResponseEntity<CourseResponse> getCourseByStudentId(@PathVariable UUID id){
+        return ResponseEntity.ok(studentService.getCourseByStudentId(id));
     }
 
     // ─── Specialized Queries ───────────────────────────────────────────

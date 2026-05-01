@@ -1,5 +1,7 @@
 package com.esoft.api.service;
 
+import com.esoft.api.dto.course.CourseResponse;
+import com.esoft.api.entity.Course;
 import com.esoft.api.dto.student.StudentRequest;
 import com.esoft.api.dto.student.StudentResponse;
 import com.esoft.api.entity.Batch;
@@ -8,6 +10,7 @@ import com.esoft.api.entity.User;
 import com.esoft.api.exception.DuplicateResourceException;
 import com.esoft.api.exception.ResourceNotFoundException;
 import com.esoft.api.repository.BatchRepository;
+import com.esoft.api.repository.ModuleRepository;
 import com.esoft.api.repository.StudentRepository;
 import com.esoft.api.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -22,13 +25,16 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final BatchRepository batchRepository;
+    private final ModuleRepository moduleRepository;
 
     public StudentService(StudentRepository studentRepository,
                           UserRepository userRepository,
-                          BatchRepository batchRepository) {
+                          BatchRepository batchRepository,
+                          ModuleRepository moduleRepository) {
         this.studentRepository = studentRepository;
         this.userRepository = userRepository;
         this.batchRepository = batchRepository;
+        this.moduleRepository = moduleRepository;
     }
 
     // ─── Student CRUD ──────────────────────────────────────────────────
@@ -120,6 +126,27 @@ public class StudentService {
                 student.getUser().getEmail(),
                 student.getBatch() != null ? student.getBatch().getId() : null,
                 student.getBatch() != null ? student.getBatch().getName() : null
+        );
+    }
+
+    public CourseResponse getCourseByStudentId(UUID id) {
+        Batch batch = findStudentOrThrow(id).getBatch();
+        if (batch == null) {
+            throw new ResourceNotFoundException("Batch", "studentId", id);
+        }
+
+        Course course = batch.getCourse();
+        if (course == null) {
+            throw new ResourceNotFoundException("Course", "studentId", id);
+        }
+
+        return new CourseResponse(
+                course.getId(),
+                course.getName(),
+                course.getDescription(),
+                batchRepository.countByCourse(course),
+                moduleRepository.countByCourse(course),
+                studentRepository.countByBatch_Course(course)
         );
     }
 }

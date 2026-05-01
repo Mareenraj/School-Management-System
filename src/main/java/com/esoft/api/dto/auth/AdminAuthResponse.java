@@ -4,9 +4,8 @@ import com.esoft.api.entity.enums.Role;
 
 import java.util.UUID;
 
-public record AuthResponse(
-        UUID userId,
-        UUID id,
+public record AdminAuthResponse(
+        UUID adminId,
         String accessToken,
         String refreshToken,
         String email,

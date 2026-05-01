@@ -5,6 +5,8 @@ import com.esoft.api.dto.profile.ProfileResponse;
 import com.esoft.api.entity.User;
 import com.esoft.api.entity.enums.Role;
 import com.esoft.api.exception.*;
+import com.esoft.api.repository.LecturerRepository;
+import com.esoft.api.repository.StudentRepository;
 import com.esoft.api.repository.UserRepository;
 import com.esoft.api.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,11 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final LecturerRepository lecturerRepository;
+    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final OtpService otpService;
@@ -31,7 +36,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final String adminEmail;
 
-    public AuthService(UserRepository userRepository,
+    public AuthService(UserRepository userRepository, LecturerRepository lecturerRepository, StudentRepository studentRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        OtpService otpService,
@@ -40,6 +45,8 @@ public class AuthService {
                        AuthenticationManager authenticationManager,
                        @Value("${admin.email}") String adminEmail) {
         this.userRepository = userRepository;
+        this.lecturerRepository = lecturerRepository;
+        this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.otpService = otpService;
@@ -108,6 +115,7 @@ public class AuthService {
         return new MessageResponse("Email verified successfully. You can now sign in.");
     }
 
+    @Transactional
     public MessageResponse resendOtp(ResendOtpRequest request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.email()));
@@ -146,13 +154,7 @@ public class AuthService {
 
         refreshTokenService.storeRefreshToken(user.getEmail(), refreshToken);
 
-        return new AuthResponse(
-                accessToken,
-                refreshToken,
-                user.getEmail(),
-                user.getName(),
-                user.getRole()
-        );
+        return buildAuthResponse(user, accessToken, refreshToken);
     }
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
@@ -177,13 +179,7 @@ public class AuthService {
 
         refreshTokenService.storeRefreshToken(user.getEmail(), newRefreshToken);
 
-        return new AuthResponse(
-                newAccessToken,
-                newRefreshToken,
-                user.getEmail(),
-                user.getName(),
-                user.getRole()
-        );
+        return buildAuthResponse(user, newAccessToken, newRefreshToken);
     }
 
     public MessageResponse logout(String email) {
@@ -202,5 +198,17 @@ public class AuthService {
                 user.getName(),
                 user.getEmail()
         );
+    }
+
+    private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
+        UUID roleEntityId = switch (user.getRole()) {
+            case LECTURER -> lecturerRepository.findByUser(user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Lecturer", "userId", user.getId())).getId();
+            case STUDENT -> studentRepository.findByUser(user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Student", "userId", user.getId())).getId();
+            default -> user.getId();
+        };
+        return new AuthResponse(user.getId(), roleEntityId, accessToken, refreshToken,
+                user.getEmail(), user.getName(), user.getRole());
     }
 }
